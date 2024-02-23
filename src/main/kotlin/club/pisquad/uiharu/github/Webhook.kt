@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
 data class GithubWebhookEventMeta(
@@ -31,10 +32,19 @@ object GithubWebhookHandler {
     }
 
     private suspend fun handlePush(meta: GithubWebhookEventMeta, payload: JsonObject) {
+
+        val commitMessages = mutableListOf<String>();
+        payload["commits"]?.jsonArray?.forEach {
+            commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
+        }
+
+
         QQBotApi.sendGithubWebhookNotice(
             type = meta.event,
             sender = payload["sender"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
-            installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: ""
+            installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
+            title1 = "commits",
+            content1 = commitMessages.joinToString("\n")
         )
     }
 }
