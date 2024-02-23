@@ -1,8 +1,8 @@
 package club.pisquad.uiharu.qqbot.api
 
 import club.pisquad.uiharu.qqbot.QQBotConfiguration
-import club.pisquad.uiharu.qqbot.api.models.GetAccessTokenRequest
-import club.pisquad.uiharu.qqbot.api.models.GetAccessTokenResponse
+import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenRequest
+import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
