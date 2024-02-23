@@ -44,7 +44,7 @@ object GithubWebhookHandler {
             sender = payload["sender"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
             installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
             title1 = "commits",
-            content1 = commitMessages.joinToString("\n")
+            content1 = commitMessages.joinToString("; ")  // We are not allowed to have newline in markdown params
         )
     }
 }
