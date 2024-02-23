@@ -32,19 +32,25 @@ object GithubWebhookHandler {
     }
 
     private suspend fun handlePush(meta: GithubWebhookEventMeta, payload: JsonObject) {
+        // Somehow there is " in the result of toString
+        val sender = payload["sender"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: ""
+        val installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: ""
+        val repo = payload["repository"]?.jsonObject?.getValue("full_name")?.toString()?.replace("\"", "") ?: ""
 
         val commitMessages = mutableListOf<String>();
         payload["commits"]?.jsonArray?.forEach {
             commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
         }
-
+        val commits = commitMessages.joinToString("\t")  // We are not allowed to have newline in markdown params
 
         QQBotApi.sendGithubWebhookNotice(
             type = meta.event,
-            sender = payload["sender"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
-            installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: "",
-            title1 = "commits",
-            content1 = commitMessages.joinToString("; ")  // We are not allowed to have newline in markdown params
+            sender = sender,
+            installation = installation,
+            title1 = "Repo",
+            content1 = repo,
+            title2 = "Commits",
+            content2 = commits
         )
     }
 }
