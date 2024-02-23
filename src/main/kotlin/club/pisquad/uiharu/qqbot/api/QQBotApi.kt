@@ -82,10 +82,10 @@ object QQBotApi {
         type: String,
         sender: String,
         installation: String,
-        title1: String = "No",
-        content1: String = "content",
-        title2: String = "No",
-        content2: String = "content",
+        title1: String? = "No",
+        content1: String? = "content",
+        title2: String? = "No",
+        content2: String? = "content",
     ) {
         callApi(
             HttpMethod.Post,
