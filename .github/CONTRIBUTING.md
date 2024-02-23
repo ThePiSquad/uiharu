@@ -1,5 +1,23 @@
 # 贡献指南
 
+## Docker 部署相关
+
+正确创建配置文件 `application.conf`，安装 Docker 之后，运行以下命令创建 Docker 镜像
+
+```bash
+docker build -t <tag> .
+```
+
+然偶将其推送到镜像托管仓库。
+
+使用以下命令启动镜像
+
+```bash
+docker run -p <port:port> -d <image:tag>
+# -p 设置端口暴露
+# -d detach
+```
+
 ## application.conf 模板
 
 文件路径：src/main/resources/application.conf
