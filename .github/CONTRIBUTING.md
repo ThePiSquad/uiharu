@@ -1,6 +1,20 @@
 # 贡献指南
 
-## Docker 部署相关
+## 指定 config 文件
+
+使用 `application.conf` 作为发布时使用的配置文件。 另外，在执行 `gradlew build` 等操作时，该文件会被拷贝到结果中，所以请不要将构建的内容上传到公共平台。
+
+为了方便开发，创建多个 profile，在启动应用时候指定特定的文件。例如
+
+- application.dev.conf
+- application.test.conf
+
+在 gradle 运行时指定配置文件的方法如下：
+```bash
+.\gradlew run --args="-config=src/main/resources/application.dev.conf"
+```
+
+## Docker 部署
 
 正确创建配置文件 `application.conf`，安装 Docker 之后，运行以下命令创建 Docker 镜像
 
@@ -13,18 +27,14 @@ docker build -t <tag> .
 使用以下命令启动镜像
 
 ```bash
-docker run -p <port:port> -d <image:tag>
-# -p 设置端口暴露
-# -d detach
+docker run -p <port:port> -d <image:tag> # -p 设置端口暴露 -d detach
 ```
 
-## application.conf 模板
+## 附录
+
+### application.conf 模板
 
 文件路径：src/main/resources/application.conf
-
-Ktor 应用启动时会自动加载该文件，敏感配置信息联系管理员获取。
-
-另外，在执行 `gradlew build` 等操作时，该文件会被拷贝到结果中，所以请不要将构建的内容上传到公共平台。
 
 ```text
 ktor {
