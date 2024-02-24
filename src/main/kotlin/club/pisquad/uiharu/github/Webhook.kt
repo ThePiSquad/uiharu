@@ -19,12 +19,40 @@ data class GithubWebhookEventMeta(
     val installationTargetId: String,
 )
 
+fun String.trimQuotes(): String {
+    return this.replace("\"", "")
+}
+
+internal object PayloadUtils {
+    fun getSender(payload: JsonObject): String {
+        // Somehow there is " in the result of toString
+        return payload["sender"]?.jsonObject?.getValue("login")?.toString()?.trimQuotes() ?: "<no provided>"
+    }
+
+    fun getInstallation(payload: JsonObject): String {
+        // Somehow there is " in the result of toString
+        return payload["organization"]?.jsonObject?.getValue("login")?.toString()?.trimQuotes() ?: "<no provided>"
+    }
+
+    fun getRepoName(payload: JsonObject): String {
+        return payload["repository"]?.jsonObject?.getValue("full_name")?.toString()?.trimQuotes() ?: "<no provided>"
+    }
+
+    fun shortenContent(text: String): String {
+        if (text.length < 30) {
+            return text
+        }
+
+        return text.substring(0, 30) + "...more..."
+    }
+
+}
 
 object GithubWebhookHandler {
     suspend fun handle(meta: GithubWebhookEventMeta, payload: JsonObject) {
         when (meta.event) {
             "push" -> handlePush(meta, payload)
-//            "issues" -> handleIssues(meta, payload)
+            "issues" -> handleIssues(meta, payload)
             else -> {
                 println("Unknown github webhook type ${meta.event}")
             }
@@ -32,12 +60,11 @@ object GithubWebhookHandler {
     }
 
     private suspend fun handlePush(meta: GithubWebhookEventMeta, payload: JsonObject) {
-        // Somehow there is " in the result of toString
-        val sender = payload["sender"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: ""
-        val installation = payload["organization"]?.jsonObject?.getValue("login")?.toString()?.replace("\"", "") ?: ""
-        val repo = payload["repository"]?.jsonObject?.getValue("full_name")?.toString()?.replace("\"", "") ?: ""
+        val sender = PayloadUtils.getSender(payload)
+        val installation = PayloadUtils.getInstallation(payload)
+        val repo = PayloadUtils.getRepoName(payload)
 
-        val commitMessages = mutableListOf<String>();
+        val commitMessages = mutableListOf<String>()
         payload["commits"]?.jsonArray?.forEach {
             commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
         }
@@ -51,6 +78,27 @@ object GithubWebhookHandler {
             content1 = repo,
             title2 = "Commits",
             content2 = commits
+        )
+    }
+
+    private suspend fun handleIssues(meta: GithubWebhookEventMeta, payload: JsonObject) {
+        val sender = PayloadUtils.getSender(payload)
+        val repo = PayloadUtils.getRepoName(payload)
+
+        val action = payload.getValue("action").toString().trimQuotes()
+        val issueTitle = payload["issue"]?.jsonObject?.getValue("title")?.toString()?.trimQuotes() ?: "<no provided>"
+        val issueContent =
+            PayloadUtils.shortenContent(payload["issue"]?.jsonObject?.getValue("body")?.toString() ?: "<no provided>")
+                .trimQuotes()
+        QQBotApi.sendGithubWebhookNotice(
+            type = "${meta.event}[$action]",
+            sender = sender,
+            installation = repo,
+            title1 = "Title",
+            content1 = issueTitle,
+            title2 = "Content",
+            content2 = issueContent
+
         )
     }
 }
