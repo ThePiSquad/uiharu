@@ -121,7 +121,7 @@ object QQBotApi {
                     			},
                     			{
                     				"key": "content2",
-                    				"values": ["${content2}"]
+                    				"values": ["$content2"]
                     			}
                     		]
                     	}
