@@ -12,6 +12,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -19,6 +20,8 @@ import java.time.LocalDateTime
 
 
 const val URL_HOST: String = "https://api.sgroup.qq.com"
+
+internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.api.QQBotApi")
 
 object QQBotApi {
 
@@ -50,7 +53,7 @@ object QQBotApi {
     }
 
     private suspend fun getAppAccessToken() {
-        println("Refreshing access token.")
+        LOGGER.debug("[QQBOT] Refreshing access token")
         // We are not using getClient() here because access_token has not been retrieved yet
         val response = HttpClient(CIO) {
             install(ContentNegotiation) {
@@ -64,14 +67,19 @@ object QQBotApi {
 
         if (response.status == HttpStatusCode.OK) {
             val data = response.body<GetAccessTokenResponse>()
+            val expiresIn = data.expiresIn.toLong()
             accessToken = data.accessToken
             accessTokenExpireTime = LocalDateTime.now().plusSeconds(data.expiresIn.toLong())
+            LOGGER.debug("[QQBOT] New access token retrieved $accessToken expire in $expiresIn")
+        } else {
+            LOGGER.error("[QQBOT] Refresh access token failed with message ${response.bodyAsText()}")
         }
     }
 
     private suspend fun callApi(
         type: HttpMethod, path: String, body: JsonElement? = null
     ): HttpResponse {
+        LOGGER.debug("Calling api [{}] {}", type.toString(), path)
         return getClient().request("${URL_HOST}${path}") {
             method = type
             setBody(body.toString())
@@ -87,7 +95,8 @@ object QQBotApi {
         title2: String? = "No",
         content2: String? = "content",
     ) {
-        callApi(
+        LOGGER.debug("Creating GithubWebhookNotice with args $type $sender $installation $title1 $content1 $title2 $content2")
+        val response = callApi(
             HttpMethod.Post,
             "/channels/${QQBotConfiguration.getConfig("channel").getString("githubNotice")}/messages",
             body = Json.parseToJsonElement(
@@ -129,5 +138,9 @@ object QQBotApi {
                 """.trimIndent()
             )
         )
+        when (response.status) {
+            HttpStatusCode.OK -> LOGGER.debug("Successfully created GithubWebhookNotice")
+            else -> LOGGER.error("Create GithubWebhook Failed ${response.bodyAsText()}")
+        }
     }
 }
