@@ -1,1 +1,1 @@
-rootProject.name = "club.pisquad.uiharu.uiharu"
+rootProject.name = "club.pisquad.uiharu"
