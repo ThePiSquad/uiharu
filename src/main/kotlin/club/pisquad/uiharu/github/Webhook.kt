@@ -41,7 +41,7 @@ object GithubWebhookHandler {
         payload["commits"]?.jsonArray?.forEach {
             commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
         }
-        val commits = commitMessages.joinToString("\t")  // We are not allowed to have newline in markdown params
+        val commits = commitMessages.joinToString("  ||  ")  // We are not allowed to have newline in markdown params
 
         QQBotApi.sendGithubWebhookNotice(
             type = meta.event,
