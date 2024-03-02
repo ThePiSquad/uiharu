@@ -124,6 +124,9 @@ object QQBotApi {
     suspend fun getWebsocketGateway(): String {
         LOGGER.debug("Fetching websocket gateway")
         val response = callApi(HttpMethod.Get, "/gateway")
+        if (response.status != HttpStatusCode.OK) {
+            LOGGER.error("Get websocket gateway failed with ${response.bodyAsText()}")
+        }
         val gatewayUrl = Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
         LOGGER.debug(
             "Response gateway $gatewayUrl"
