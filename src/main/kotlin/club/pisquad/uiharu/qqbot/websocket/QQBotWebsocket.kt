@@ -1,7 +1,7 @@
 package club.pisquad.uiharu.qqbot.websocket
 
 import club.pisquad.uiharu.qqbot.api.QQBotApi
-import club.pisquad.uiharu.qqbot.websocket.schemas.*
+import club.pisquad.uiharu.qqbot.websocket.dto.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -57,6 +57,9 @@ object QQBotWebsocket {
         while (true) {
             val data = session.receiveDeserialized<PayloadBase<JsonElement>>()
             println("new incoming message $data")
+            when (data.t) {
+//                EventType.MESSAGE_CREATE.value ->
+            }
         }
     }
 

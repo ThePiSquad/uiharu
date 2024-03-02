@@ -1,4 +1,4 @@
-package club.pisquad.uiharu.qqbot.websocket.schemas
+package club.pisquad.uiharu.qqbot.websocket.dto
 
 import club.pisquad.uiharu.qqbot.schemas.User
 import kotlinx.serialization.SerialName
