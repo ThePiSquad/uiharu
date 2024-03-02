@@ -3,6 +3,7 @@ package club.pisquad.uiharu.qqbot.api
 import club.pisquad.uiharu.qqbot.QQBotConfiguration
 import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenRequest
 import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenResponse
+import club.pisquad.uiharu.qqbot.api.schemas.MarkdownTemplateFactory
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -16,6 +17,7 @@ import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import java.time.LocalDateTime
 
 
@@ -90,52 +92,25 @@ object QQBotApi {
         type: String,
         sender: String,
         installation: String,
-        title1: String? = "No",
-        content1: String? = "content",
-        title2: String? = "No",
-        content2: String? = "content",
+        title1: String = "No",
+        content1: String = "content",
+        title2: String = "No",
+        content2: String = "content",
     ) {
         LOGGER.debug("Creating GithubWebhookNotice with args $type $sender $installation $title1 $content1 $title2 $content2")
         val response = callApi(
             HttpMethod.Post,
             "/channels/${QQBotConfiguration.getConfig("channel").getString("githubNotice")}/messages",
-            body = Json.parseToJsonElement(
-                """
-                    {
-                    	"markdown": {
-                    		"custom_template_id": "102089083_1708578737",
-                    		"params": [{
-                    				"key": "type",
-                    				"values": ["$type"]
-                    			},
-                    			{
-                    				"key": "sender",
-                    				"values": ["$sender"]
-                    			},
-                    			{
-                    				"key": "installation",
-                    				"values": ["$installation"]
-                    			},
-                    			{
-                    				"key": "title1",
-                    				"values": ["$title1"]
-                    			},
-                    			{
-                    				"key": "content1",
-                    				"values": ["$content1"]
-                    			},
-                    			{
-                    				"key": "title2",
-                    				"values": ["$title2"]
-                    			},
-                    			{
-                    				"key": "content2",
-                    				"values": ["$content2"]
-                    			}
-                    		]
-                    	}
-                    }
-                """.trimIndent()
+            body = Json.encodeToJsonElement(
+                MarkdownTemplateFactory.githubWebhookNotice(
+                    type,
+                    sender,
+                    installation,
+                    title1,
+                    content1,
+                    title2,
+                    content2,
+                )
             )
         )
         when (response.status) {
