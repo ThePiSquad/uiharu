@@ -27,7 +27,7 @@ internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.api.QQBotApi")
 
 object QQBotApi {
 
-    private lateinit var accessToken: String
+    lateinit var accessToken: String
     private lateinit var accessTokenExpireTime: LocalDateTime
 
     init {
@@ -147,7 +147,13 @@ object QQBotApi {
     }
 
     suspend fun getWebsocketGateway(): String {
-        val response = callApi(HttpMethod.Get, "gateway")
-        return Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
+        LOGGER.debug("Fetching websocket gateway")
+        val response = callApi(HttpMethod.Get, "/gateway")
+        val gatewayUrl = Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
+        LOGGER.debug(
+            "Response gateway $gatewayUrl"
+        )
+        return gatewayUrl
+
     }
 }
