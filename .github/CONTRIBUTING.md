@@ -46,7 +46,8 @@ ktor {
     application {
         modules = [
             club.pisquad.uiharu.github.WebhookKt.githubWebhook,
-            club.pisquad.uiharu.qqbot.QQBotKt.qqbot
+            club.pisquad.uiharu.qqbot.QQBotKt.qqbot,
+            club.pisquad.uiharu.qqbot.websocket.QQBotWebsocketKt.QQBotWebsocket
         ]
     }
 }
