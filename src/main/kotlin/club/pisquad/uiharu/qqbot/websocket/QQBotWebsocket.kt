@@ -56,12 +56,11 @@ object QQBotWebsocket {
     private suspend fun listen(session: DefaultClientWebSocketSession) {
         while (true) {
             val data = session.receiveDeserialized<PayloadBase<JsonElement>>()
-            println("new incoming message $data")
-            when (data.t) {
-//                EventType.MESSAGE_CREATE.value ->
+            when (data.op) {
+                OpCode.DISPATCH.value -> EventHandler.handle(data.t, data.d!!)
+            }
             }
         }
-    }
 
 
     suspend fun start() {
