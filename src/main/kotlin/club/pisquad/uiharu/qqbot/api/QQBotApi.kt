@@ -4,6 +4,7 @@ import club.pisquad.uiharu.qqbot.QQBotConfiguration
 import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenRequest
 import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenResponse
 import club.pisquad.uiharu.qqbot.api.schemas.MarkdownTemplateFactory
+import club.pisquad.uiharu.trimQuotes
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -18,6 +19,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import java.time.LocalDateTime
 
 
@@ -27,7 +29,7 @@ internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.api.QQBotApi")
 
 object QQBotApi {
 
-    private lateinit var accessToken: String
+    lateinit var accessToken: String
     private lateinit var accessTokenExpireTime: LocalDateTime
 
     init {
@@ -117,5 +119,19 @@ object QQBotApi {
             HttpStatusCode.OK -> LOGGER.debug("Successfully created GithubWebhookNotice")
             else -> LOGGER.error("Create GithubWebhook Failed ${response.bodyAsText()}")
         }
+    }
+
+    suspend fun getWebsocketGateway(): String {
+        LOGGER.debug("Fetching websocket gateway")
+        val response = callApi(HttpMethod.Get, "/gateway")
+        if (response.status != HttpStatusCode.OK) {
+            LOGGER.error("Get websocket gateway failed with ${response.bodyAsText()}")
+        }
+        val gatewayUrl = Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
+        LOGGER.debug(
+            "Response gateway $gatewayUrl"
+        )
+        return gatewayUrl
+
     }
 }

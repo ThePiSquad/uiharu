@@ -1,6 +1,7 @@
 package club.pisquad.uiharu.github
 
 import club.pisquad.uiharu.qqbot.api.QQBotApi
+import club.pisquad.uiharu.trimQuotes
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -18,10 +19,6 @@ data class GithubWebhookEventMeta(
     val installationTargetType: String,
     val installationTargetId: String,
 )
-
-fun String.trimQuotes(): String {
-    return this.replace("\"", "")
-}
 
 internal object PayloadUtils {
     fun getSender(payload: JsonObject): String {
