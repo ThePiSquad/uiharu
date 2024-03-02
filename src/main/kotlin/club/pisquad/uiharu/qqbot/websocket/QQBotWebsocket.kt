@@ -10,6 +10,7 @@ import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.util.*
@@ -36,6 +37,8 @@ object QQBotWebsocket {
             exitProcess(-1)
         }
         latestSerialNumber = data.s
+
+        setHeartbeatTimer(data.d!!.heartBeatInterval, session)
     }
 
     private suspend fun identify(session: DefaultClientWebSocketSession) {
@@ -76,12 +79,18 @@ object QQBotWebsocket {
         }
     }
 
-    suspend fun setHeartbeatTimer(period: Long) {
+    private suspend fun setHeartbeatTimer(period: Long, session: DefaultClientWebSocketSession) {
         LOGGER.debug("Setting websocket heartbeat timer")
-        heartBeatTimer.cancel()
-        heartBeatTimer.schedule(delay = 0, period = period) {}
+        //TODO: Cancel Timer before schedule a new one
+        heartBeatTimer.schedule(delay = period, period = period) {
+            runBlocking {
+                LOGGER.info("Sending heartbeat")
+                session.sendSerialized(PayloadBase(op = OpCode.HEARTBEAT.value, d = latestSerialNumber))
+                //NOTE: We cannot receive and handle response here,
+                // there will be conflicts with other places which are listening to the incoming messages
+            }
+        }
     }
-
 }
 
 fun Application.QQBotWebsocket() {
