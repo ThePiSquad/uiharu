@@ -27,7 +27,7 @@ enum class OpCode(val value: Int) {
 data class PayloadBase<T>(
     //TODO: use enum class in here
     val op: Int,
-    val d: T,
+    val d: T? = null,
     val s: Int? = null,
     val t: String = "",
 )
