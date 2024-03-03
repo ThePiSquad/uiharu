@@ -1,18 +1,14 @@
-package club.pisquad.uiharu.qqbot.command
+package club.pisquad.uiharu.qqbot.command.askai
 
 import club.pisquad.uiharu.AppConfiguration
-import club.pisquad.uiharu.qqbot.api.QQBotApi
-import club.pisquad.uiharu.qqbot.api.dto.SendChannelMessageRequest
-import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
 import com.alibaba.dashscope.aigc.generation.Generation
 import com.alibaba.dashscope.aigc.generation.models.QwenParam
 import com.alibaba.dashscope.common.Message
 import com.alibaba.dashscope.common.MessageManager
 import com.alibaba.dashscope.common.Role
 import com.alibaba.dashscope.utils.Constants
-import io.ktor.client.statement.*
 
-internal object AskAiUtils {
+internal object AskAiService {
     private val gen: Generation = Generation()
     private val messageManager: MessageManager = MessageManager()
 
@@ -43,18 +39,5 @@ internal object AskAiUtils {
         messageManager.add(result)
 
         return result.output.choices[0].message.content
-    }
-}
-
-object AskAICommand : QQBotCommand {
-    override val name = "ask-ai"
-    override val usage = "ask-ai"
-    override val docs = "随机抓取幸运AI"
-
-    override suspend fun handle(event: MessageCreateEvent) {
-        val response = QQBotApi.sendChannelMessage(
-            event.channelId, SendChannelMessageRequest(content = AskAiUtils.getResponse("介绍一下你自己"))
-        )
-        println(response.bodyAsText())
     }
 }
