@@ -31,11 +31,13 @@ internal object AskAiService {
     }
 
     fun getResponse(message: String): String {
+        messageManager.add(Message.builder().role(Role.USER.value).content(message).build())
+
         val param = QwenParam.builder().model(Generation.Models.QWEN_PLUS).messages(messageManager.get())
             .resultFormat(QwenParam.ResultFormat.MESSAGE).enableSearch(true).build()
 
-        param
         val result = gen.call(param)
+
         messageManager.add(result)
 
         return result.output.choices[0].message.content
