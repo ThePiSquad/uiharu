@@ -33,6 +33,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    // Used by AskAi
+    implementation("com.alibaba:dashscope-sdk-java:2.10.1")
 }
 
 tasks.register<DefaultTask>("printVersion") {

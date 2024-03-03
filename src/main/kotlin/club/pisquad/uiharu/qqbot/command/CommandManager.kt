@@ -2,6 +2,7 @@ package club.pisquad.uiharu.qqbot.command
 
 import club.pisquad.uiharu.qqbot.api.QQBotApi
 import club.pisquad.uiharu.qqbot.api.dto.SendChannelMessageRequest
+import club.pisquad.uiharu.qqbot.command.askai.AskAICommand
 import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
 import io.ktor.util.logging.*
 
