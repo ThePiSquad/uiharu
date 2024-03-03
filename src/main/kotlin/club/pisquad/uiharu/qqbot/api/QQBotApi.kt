@@ -4,6 +4,7 @@ import club.pisquad.uiharu.qqbot.QQBotConfiguration
 import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenRequest
 import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenResponse
 import club.pisquad.uiharu.qqbot.api.dto.MarkdownTemplateFactory
+import club.pisquad.uiharu.qqbot.api.dto.SendChannelMessageRequest
 import club.pisquad.uiharu.trimQuotes
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -99,10 +100,8 @@ object QQBotApi {
         content2: String = "content",
     ) {
         LOGGER.debug("Creating GithubWebhookNotice with args $type $sender $installation $title1 $content1 $title2 $content2")
-        val response = callApi(
-            HttpMethod.Post,
-            "/channels/${QQBotConfiguration.getConfig("channel").getString("githubNotice")}/messages",
-            body = Json.encodeToString(
+        val response = sendChannelMessage(
+            QQBotConfiguration.getConfig("channel").getString("githubNotice"),
                 MarkdownTemplateFactory.githubWebhookNotice(
                     type,
                     sender,
@@ -112,7 +111,6 @@ object QQBotApi {
                     title2,
                     content2,
                 )
-            )
         )
         when (response.status) {
             HttpStatusCode.OK -> LOGGER.debug("Successfully created GithubWebhookNotice")
@@ -133,7 +131,7 @@ object QQBotApi {
         return gatewayUrl
     }
 
-    suspend fun sendChannelMessage(channelId: String) {
-        callApi(HttpMethod.Post, "/channels/$channelId/messages")
+    suspend fun sendChannelMessage(channelId: String, message: SendChannelMessageRequest): HttpResponse {
+        return callApi(HttpMethod.Post, "/channels/$channelId/messages", body = Json.encodeToString(message))
     }
 }
