@@ -10,7 +10,7 @@ import com.alibaba.dashscope.utils.Constants
 
 internal object AskAiService {
     private val gen: Generation = Generation()
-    private val messageManager: MessageManager = MessageManager()
+    private val messageManager: MessageManager = MessageManager(10)
 
     init {
         Constants.apiKey = AppConfiguration.getString("dashScopeApiKey")
@@ -32,9 +32,9 @@ internal object AskAiService {
 
     fun getResponse(message: String): String {
         val param = QwenParam.builder().model(Generation.Models.QWEN_PLUS).messages(messageManager.get())
-            .resultFormat(QwenParam.ResultFormat.MESSAGE).enableSearch(true).build();
+            .resultFormat(QwenParam.ResultFormat.MESSAGE).enableSearch(true).build()
 
-        param.prompt = message
+        param
         val result = gen.call(param)
         messageManager.add(result)
 
