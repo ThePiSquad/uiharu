@@ -14,7 +14,7 @@ object AskAICommand : QQBotCommand {
 
     override suspend fun handle(event: MessageCreateEvent) {
         val response = QQBotApi.sendChannelMessage(
-            event.channelId, SendChannelMessageRequest(content = AskAiService.getResponse("介绍一下你自己"))
+            event.channelId, SendChannelMessageRequest(content = AskAiService.getResponse(event.content))
         )
         println(response.bodyAsText())
     }
