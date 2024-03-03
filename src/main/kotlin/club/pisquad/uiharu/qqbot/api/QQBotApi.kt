@@ -1,9 +1,9 @@
 package club.pisquad.uiharu.qqbot.api
 
 import club.pisquad.uiharu.qqbot.QQBotConfiguration
-import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenRequest
-import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenResponse
-import club.pisquad.uiharu.qqbot.api.schemas.MarkdownTemplateFactory
+import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenRequest
+import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenResponse
+import club.pisquad.uiharu.qqbot.api.dto.MarkdownTemplateFactory
 import club.pisquad.uiharu.trimQuotes
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -132,6 +132,9 @@ object QQBotApi {
             "Response gateway $gatewayUrl"
         )
         return gatewayUrl
+    }
 
+    suspend fun sendChannelMessage(channelId: String) {
+        callApi(HttpMethod.Post, "/channels/$channelId/messages")
     }
 }

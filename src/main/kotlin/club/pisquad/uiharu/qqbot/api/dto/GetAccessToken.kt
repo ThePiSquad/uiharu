@@ -1,4 +1,4 @@
-package club.pisquad.uiharu.qqbot.api.schemas
+package club.pisquad.uiharu.qqbot.api.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
