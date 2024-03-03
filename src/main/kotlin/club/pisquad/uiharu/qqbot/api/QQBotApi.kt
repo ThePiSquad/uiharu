@@ -16,9 +16,8 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import java.time.LocalDateTime
 
@@ -81,12 +80,12 @@ object QQBotApi {
     }
 
     private suspend fun callApi(
-        type: HttpMethod, path: String, body: JsonElement? = null
+        type: HttpMethod, path: String, body: String? = null
     ): HttpResponse {
         LOGGER.debug("Calling api [{}] {}", type.toString(), path)
         return getClient().request("${URL_HOST}${path}") {
             method = type
-            setBody(body.toString())
+            setBody(body)
         }
     }
 
@@ -103,7 +102,7 @@ object QQBotApi {
         val response = callApi(
             HttpMethod.Post,
             "/channels/${QQBotConfiguration.getConfig("channel").getString("githubNotice")}/messages",
-            body = Json.encodeToJsonElement(
+            body = Json.encodeToString(
                 MarkdownTemplateFactory.githubWebhookNotice(
                     type,
                     sender,
