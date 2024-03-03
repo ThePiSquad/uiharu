@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "club.pisquad.uiharu"
-version = "0.0.3"
+version = "0.1.0"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
