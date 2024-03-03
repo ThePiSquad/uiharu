@@ -1,8 +1,11 @@
 package club.pisquad.uiharu.qqbot.api
 
 import club.pisquad.uiharu.qqbot.QQBotConfiguration
-import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenRequest
-import club.pisquad.uiharu.qqbot.api.schemas.GetAccessTokenResponse
+import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenRequest
+import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenResponse
+import club.pisquad.uiharu.qqbot.api.dto.MarkdownTemplateFactory
+import club.pisquad.uiharu.qqbot.api.dto.SendChannelMessageRequest
+import club.pisquad.uiharu.trimQuotes
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -14,8 +17,9 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 import java.time.LocalDateTime
 
 
@@ -25,7 +29,7 @@ internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.api.QQBotApi")
 
 object QQBotApi {
 
-    private lateinit var accessToken: String
+    lateinit var accessToken: String
     private lateinit var accessTokenExpireTime: LocalDateTime
 
     init {
@@ -77,12 +81,12 @@ object QQBotApi {
     }
 
     private suspend fun callApi(
-        type: HttpMethod, path: String, body: JsonElement? = null
+        type: HttpMethod, path: String, body: String? = null
     ): HttpResponse {
         LOGGER.debug("Calling api [{}] {}", type.toString(), path)
         return getClient().request("${URL_HOST}${path}") {
             method = type
-            setBody(body.toString())
+            setBody(body)
         }
     }
 
@@ -90,57 +94,44 @@ object QQBotApi {
         type: String,
         sender: String,
         installation: String,
-        title1: String? = "No",
-        content1: String? = "content",
-        title2: String? = "No",
-        content2: String? = "content",
+        title1: String = "No",
+        content1: String = "content",
+        title2: String = "No",
+        content2: String = "content",
     ) {
         LOGGER.debug("Creating GithubWebhookNotice with args $type $sender $installation $title1 $content1 $title2 $content2")
-        val response = callApi(
-            HttpMethod.Post,
-            "/channels/${QQBotConfiguration.getConfig("channel").getString("githubNotice")}/messages",
-            body = Json.parseToJsonElement(
-                """
-                    {
-                    	"markdown": {
-                    		"custom_template_id": "102089083_1708578737",
-                    		"params": [{
-                    				"key": "type",
-                    				"values": ["$type"]
-                    			},
-                    			{
-                    				"key": "sender",
-                    				"values": ["$sender"]
-                    			},
-                    			{
-                    				"key": "installation",
-                    				"values": ["$installation"]
-                    			},
-                    			{
-                    				"key": "title1",
-                    				"values": ["$title1"]
-                    			},
-                    			{
-                    				"key": "content1",
-                    				"values": ["$content1"]
-                    			},
-                    			{
-                    				"key": "title2",
-                    				"values": ["$title2"]
-                    			},
-                    			{
-                    				"key": "content2",
-                    				"values": ["$content2"]
-                    			}
-                    		]
-                    	}
-                    }
-                """.trimIndent()
-            )
+        val response = sendChannelMessage(
+            QQBotConfiguration.getConfig("channel").getString("githubNotice"),
+                MarkdownTemplateFactory.githubWebhookNotice(
+                    type,
+                    sender,
+                    installation,
+                    title1,
+                    content1,
+                    title2,
+                    content2,
+                )
         )
         when (response.status) {
             HttpStatusCode.OK -> LOGGER.debug("Successfully created GithubWebhookNotice")
             else -> LOGGER.error("Create GithubWebhook Failed ${response.bodyAsText()}")
         }
+    }
+
+    suspend fun getWebsocketGateway(): String {
+        LOGGER.debug("Fetching websocket gateway")
+        val response = callApi(HttpMethod.Get, "/gateway")
+        if (response.status != HttpStatusCode.OK) {
+            LOGGER.error("Get websocket gateway failed with ${response.bodyAsText()}")
+        }
+        val gatewayUrl = Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
+        LOGGER.debug(
+            "Response gateway $gatewayUrl"
+        )
+        return gatewayUrl
+    }
+
+    suspend fun sendChannelMessage(channelId: String, message: SendChannelMessageRequest): HttpResponse {
+        return callApi(HttpMethod.Post, "/channels/$channelId/messages", body = Json.encodeToString(message))
     }
 }

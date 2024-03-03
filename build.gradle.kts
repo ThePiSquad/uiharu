@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "club.pisquad.uiharu"
-version = "0.0.3"
+version = "0.1.0"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
@@ -27,11 +27,15 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-websockets:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    // Used by AskAi
+    implementation("com.alibaba:dashscope-sdk-java:2.10.1")
 }
 
 tasks.register<DefaultTask>("printVersion") {
