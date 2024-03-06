@@ -26,7 +26,7 @@ object QQBotWebsocket {
         install(WebSockets)
     }
 
-    //TODO: use middleware for automatically trace the value
+    //TODO: use middleware for automatically tracing the value
     private var latestSerialNumber: Int? = null
 
     private suspend fun connect(session: DefaultClientWebSocketSession) {
