@@ -1,10 +1,7 @@
 package club.pisquad.uiharu.qqbot.api
 
 import club.pisquad.uiharu.qqbot.QQBotConfiguration
-import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenRequest
-import club.pisquad.uiharu.qqbot.api.dto.GetAccessTokenResponse
-import club.pisquad.uiharu.qqbot.api.dto.MarkdownTemplateFactory
-import club.pisquad.uiharu.qqbot.api.dto.SendChannelMessageRequest
+import club.pisquad.uiharu.qqbot.api.dto.*
 import club.pisquad.uiharu.trimQuotes
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -56,8 +53,13 @@ object QQBotApi {
         }
     }
 
+    private fun handleError(api: String, body: String) {
+        val error = Json.decodeFromString<ApiErrorResponse>(body)
+        LOGGER.error("API $api error with code ${error.code} message ${error.message} ")
+    }
+
     private suspend fun getAppAccessToken() {
-        LOGGER.debug("[QQBOT] Refreshing access token")
+        LOGGER.debug("Refreshing access token")
         // We are not using getClient() here because access_token has not been retrieved yet
         val response = HttpClient(CIO) {
             install(ContentNegotiation) {
@@ -73,10 +75,10 @@ object QQBotApi {
             val data = response.body<GetAccessTokenResponse>()
             val expiresIn = data.expiresIn.toLong()
             accessToken = data.accessToken
-            accessTokenExpireTime = LocalDateTime.now().plusSeconds(data.expiresIn.toLong())
+            accessTokenExpireTime = LocalDateTime.now().plusSeconds(expiresIn)
             LOGGER.debug("[QQBOT] New access token retrieved $accessToken expire in $expiresIn")
         } else {
-            LOGGER.error("[QQBOT] Refresh access token failed with message ${response.bodyAsText()}")
+            handleError("getAppAccessToken", response.body())
         }
     }
 
@@ -84,10 +86,16 @@ object QQBotApi {
         type: HttpMethod, path: String, body: String? = null
     ): HttpResponse {
         LOGGER.debug("Calling api [{}] {}", type.toString(), path)
-        return getClient().request("${URL_HOST}${path}") {
+        val response = getClient().request("${URL_HOST}${path}") {
             method = type
             setBody(body)
         }
+
+        if (response.status != HttpStatusCode.OK) {
+            handleError(path, response.bodyAsText())
+        }
+
+        return response
     }
 
     suspend fun sendGithubWebhookNotice(
@@ -102,32 +110,22 @@ object QQBotApi {
         LOGGER.debug("Creating GithubWebhookNotice with args $type $sender $installation $title1 $content1 $title2 $content2")
         val response = sendChannelMessage(
             QQBotConfiguration.getConfig("channel").getString("githubNotice"),
-                MarkdownTemplateFactory.githubWebhookNotice(
-                    type,
-                    sender,
-                    installation,
-                    title1,
-                    content1,
-                    title2,
-                    content2,
-                )
+            MarkdownTemplateFactory.githubWebhookNotice(
+                type,
+                sender,
+                installation,
+                title1,
+                content1,
+                title2,
+                content2,
+            )
         )
-        when (response.status) {
-            HttpStatusCode.OK -> LOGGER.debug("Successfully created GithubWebhookNotice")
-            else -> LOGGER.error("Create GithubWebhook Failed ${response.bodyAsText()}")
-        }
     }
 
     suspend fun getWebsocketGateway(): String {
-        LOGGER.debug("Fetching websocket gateway")
         val response = callApi(HttpMethod.Get, "/gateway")
-        if (response.status != HttpStatusCode.OK) {
-            LOGGER.error("Get websocket gateway failed with ${response.bodyAsText()}")
-        }
         val gatewayUrl = Json.parseToJsonElement(response.bodyAsText()).jsonObject["url"].toString().trimQuotes()
-        LOGGER.debug(
-            "Response gateway $gatewayUrl"
-        )
+        LOGGER.debug("Response gateway $gatewayUrl")
         return gatewayUrl
     }
 
