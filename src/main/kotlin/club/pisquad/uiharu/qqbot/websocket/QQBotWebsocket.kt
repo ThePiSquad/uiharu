@@ -31,40 +31,6 @@ object QQBotWebsocket {
     //TODO: use middleware for automatically tracing the value
     private var latestSerialNumber: Int? = null
 
-//    private suspend fun identify(session: DefaultClientWebSocketSession) {
-//        session.sendSerialized(
-//            PayloadBase(
-//                op = OpCode.IDENTIFY.value, d = IdentifyRequest("QQBot " + QQBotApi.accessToken, intents = INTENT_VALUE)
-//            )
-//        )
-//        val response = session.receiveDeserialized<PayloadBase<Any>>()
-//        if (response.op != OpCode.HELLO.value) {
-//            throw ConnectionError()
-//        }
-//        latestSerialNumber = response.s
-//    }
-
-//    private suspend fun reconnect(session: DefaultClientWebSocketSession) {
-//        // We already send a message to the server, just handle the response
-//        val data = session.receiveDeserialized<PayloadBase<ConnectResponse>>()
-//        if (data.op != OpCode.HELLO.value) {
-//            LOGGER.error("Connect to websocket failed with response $data")
-//            exitProcess(-1)
-//        }
-//        latestSerialNumber = data.s
-//
-//        setHeartbeatTimer(data.d!!.heartBeatInterval, session)
-//    }
-
-    private suspend fun listen(session: DefaultClientWebSocketSession) {
-        while (true) {
-            val content = session.receiveDeserialized<PayloadBase<JsonElement>>()
-            WebsocketHandler.handle(content)
-            latestSerialNumber = content.s ?: latestSerialNumber
-        }
-    }
-
-
     suspend fun run() {
         gatewayUrl = QQBotApi.getWebsocketGateway();
         LOGGER.debug("Connecting to websocket using gatewayUrl $gatewayUrl")
