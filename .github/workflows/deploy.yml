@@ -1,11 +1,11 @@
 name: Deploy
 
 on:
-#  push:
-#    branches:
-#      - master
-#    tags:
-#      - "v*.*.*"
+  #  push:
+  #    branches:
+  #      - master
+  #    tags:
+  #      - "v*.*.*"
   workflow_dispatch:
 
 jobs:
@@ -51,6 +51,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           tags: registry.cn-hangzhou.aliyuncs.com/pisquad/uiharu:${{ steps.version.outputs.version }}
 
