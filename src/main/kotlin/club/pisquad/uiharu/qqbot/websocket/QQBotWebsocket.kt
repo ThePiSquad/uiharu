@@ -22,7 +22,7 @@ internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.websocket.QQBo
 
 object QQBotWebsocket {
     private lateinit var gatewayUrl: String;
-    private var heartBeatTimer: Timer = Timer()
+    private var heartBeatTimer: Timer? = null
     private var sessionId: String? = null
     private var client: HttpClient = HttpClient(CIO) {
         install(WebSockets)
@@ -134,9 +134,12 @@ object QQBotWebsocket {
     }
 
     private suspend fun setHeartbeatTimer(period: Long, session: DefaultClientWebSocketSession) {
-        LOGGER.debug("Setting websocket heartbeat timer")
-        //TODO: Cancel Timer before schedule a new one
-        heartBeatTimer.schedule(delay = period, period = period) {
+        if (heartBeatTimer == null) {
+            LOGGER.debug("Cancelling websocket heartbeat timer")
+        }
+        heartBeatTimer = Timer()
+        // TODO: Thread safety
+        heartBeatTimer!!.schedule(delay = period, period = period) {
             runBlocking {
                 LOGGER.debug("Sending heartbeat")
                 session.sendSerialized(PayloadBase(op = OpCode.HEARTBEAT.value, d = latestSerialNumber))
