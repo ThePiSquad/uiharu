@@ -75,22 +75,22 @@ object QQBotWebsocket {
                     }
                     // Listen event
                     while (true) {
-                        val event = receiveDeserialized<PayloadBase<JsonElement>>()
-                        when (event.op) {
+                        val payload = receiveDeserialized<PayloadBase<JsonElement>>()
+                        when (payload.op) {
                             OpCode.HEARTBEAT_ACK.value -> {
                                 LOGGER.debug("received heartbeat ACK")
                             }
 
                             OpCode.DISPATCH.value -> {
                                 LOGGER.debug("received new dispatch")
-                                DispatchHandler.handle(event)
+                                DispatchHandler.handle(payload)
                             }
 
                             else -> {
-                                LOGGER.debug("unhandled event")
+                                LOGGER.debug("unhandled event {}", payload)
                             }
                         }
-                        latestSerialNumber = event.s ?: latestSerialNumber
+                        latestSerialNumber = payload.s ?: latestSerialNumber
                     }
                 }
             } catch (e: ConnectionError) {
