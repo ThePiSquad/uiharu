@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class IdentifyRequestData(
+data class IdentifyRequest(
     val token: String,
     val intents: Int,
     val shard: List<Int> = listOf(0, 1),
@@ -13,7 +13,7 @@ data class IdentifyRequestData(
 )
 
 @Serializable
-data class IdentifyResponseData(
+data class IdentifyResponse(
     val version: Int,
     @SerialName("session_id") val sessionId: String,
     val user: User,

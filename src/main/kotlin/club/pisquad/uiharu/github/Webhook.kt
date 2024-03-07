@@ -5,9 +5,12 @@ import club.pisquad.uiharu.trimQuotes
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.util.logging.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+
+val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.github.webhook")
 
 data class GithubWebhookEventMeta(
     val hookId: String,

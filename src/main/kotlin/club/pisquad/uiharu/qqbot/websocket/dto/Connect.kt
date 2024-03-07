@@ -4,6 +4,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ConnectResponseData(
+data class ConnectResponse(
     @SerialName("heartbeat_interval") val heartBeatInterval: Long
 )
