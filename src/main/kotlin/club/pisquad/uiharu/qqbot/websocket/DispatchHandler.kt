@@ -1,5 +1,6 @@
 package club.pisquad.uiharu.qqbot.websocket
 
+import club.pisquad.uiharu.qqbot.command.CommandManager
 import club.pisquad.uiharu.qqbot.websocket.dto.EventType
 import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
 import club.pisquad.uiharu.qqbot.websocket.dto.PayloadBase
@@ -26,7 +27,7 @@ internal object DispatchHandler {
 
     private suspend fun handleMessageCreate(event: MessageCreateEvent) {
         LOGGER.debug("handling MessageCreateEvent")
-        println(event)
+        CommandManager.handle(event)
     }
 
 }
