@@ -81,8 +81,13 @@ object QQBotWebsocket {
                                 LOGGER.debug("received heartbeat ACK")
                             }
 
+                            OpCode.DISPATCH.value -> {
+                                LOGGER.debug("received new dispatch")
+                                DispatchHandler.handle(event)
+                            }
+
                             else -> {
-                                WebsocketHandler.handle(event)
+                                LOGGER.debug("unhandled event")
                             }
                         }
                         latestSerialNumber = event.s ?: latestSerialNumber
