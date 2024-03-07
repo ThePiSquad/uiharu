@@ -105,8 +105,9 @@ object QQBotWebsocket {
     }
 
     private suspend fun setHeartbeatTimer(period: Long, session: DefaultClientWebSocketSession) {
-        if (heartBeatTimer == null) {
+        if (heartBeatTimer != null) {
             LOGGER.debug("Cancelling websocket heartbeat timer")
+            heartBeatTimer?.cancel()
         }
         heartBeatTimer = Timer()
         // TODO: Thread safety
