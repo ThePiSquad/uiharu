@@ -4,6 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ConnectResponse(
-    @SerialName("heartbeat_interval") val heartBeatInterval: Long
+data class ReconnectRequest(
+    val token: String,
+    @SerialName("session_id") val sessionId: String,
+    val seq: Int?,
 )

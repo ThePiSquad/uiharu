@@ -2,6 +2,7 @@ package club.pisquad.uiharu.qqbot.websocket
 
 import club.pisquad.uiharu.qqbot.api.QQBotApi
 import club.pisquad.uiharu.qqbot.websocket.dto.*
+import club.pisquad.uiharu.qqbot.websocket.exception.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
@@ -15,13 +16,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import java.util.*
 import kotlin.concurrent.schedule
-import kotlin.system.exitProcess
 
-internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.websocket.QQBotWebsocket")
+internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.websocket")
 
 object QQBotWebsocket {
     private lateinit var gatewayUrl: String;
-    private var heartBeatTimer: Timer = Timer()
+    private var heartBeatTimer: Timer? = null
+    private var sessionId: String? = null
     private var client: HttpClient = HttpClient(CIO) {
         install(WebSockets)
     }
@@ -29,64 +30,137 @@ object QQBotWebsocket {
     //TODO: use middleware for automatically tracing the value
     private var latestSerialNumber: Int? = null
 
-    private suspend fun connect(session: DefaultClientWebSocketSession) {
-        // We already send a message to the server, just handle the response
-        val data = session.receiveDeserialized<PayloadBase<ConnectResponseData>>()
-        if (data.op != OpCode.HELLO.value) {
-            LOGGER.error("Connect to websocket failed with response $data")
-            exitProcess(-1)
-        }
-        latestSerialNumber = data.s
+    private suspend fun handleSingleEvent(session: DefaultClientWebSocketSession) {
+        val payload = session.receiveDeserialized<PayloadBase<JsonElement>>()
+        when (payload.op) {
+            OpCode.HEARTBEAT_ACK.value -> {
+                LOGGER.debug("received heartbeat ACK")
+            }
 
-        setHeartbeatTimer(data.d!!.heartBeatInterval, session)
+            OpCode.DISPATCH.value -> {
+                LOGGER.debug("received new dispatch")
+                DispatchHandler.handle(payload)
+            }
+
+            OpCode.RECONNECT.value -> {
+                LOGGER.debug("Reconnect by server")
+                throw ReconnectByServer()
+            }
+
+            OpCode.INVALID_SESSION.value -> {
+                throw InvalidSession()
+            }
+
+            OpCode.HELLO.value -> {
+                if (payload.t == "RESUMED") {
+                    throw ReconnectResumed()
+                }
+
+            }
+
+            else -> {
+                LOGGER.debug("unhandled event {}", payload)
+            }
+        }
+        latestSerialNumber = payload.s ?: latestSerialNumber
     }
 
-    private suspend fun identify(session: DefaultClientWebSocketSession) {
-        session.sendSerialized(
+    private suspend fun reconnect(session: DefaultClientWebSocketSession) {
+        session.sendSerialized<PayloadBase<ReconnectRequest>>(
             PayloadBase(
-                op = OpCode.IDENTIFY.value,
-                d = IdentifyRequestData("QQBot " + QQBotApi.accessToken, intents = INTENT_VALUE)
+                op = OpCode.RECONNECT.value, d = ReconnectRequest(
+                    token = "QQBot " + QQBotApi.accessToken, sessionId = sessionId!!, seq = latestSerialNumber
+                )
             )
         )
-        val data = session.receiveDeserialized<PayloadBase<IdentifyResponseData>>()
-        latestSerialNumber = data.s
-
+        try {
+            handleSingleEvent(session)
+            LOGGER.debug("Resume started to receive unhandled message")
+        } catch (e: InvalidSession) {
+            LOGGER.error("Session resume failed", e)
+            throw ReconnectError()
+        }
     }
 
-    private suspend fun listen(session: DefaultClientWebSocketSession) {
-        while (true) {
-            val data = session.receiveDeserialized<PayloadBase<JsonElement>>()
-            when (data.op) {
-                OpCode.DISPATCH.value -> EventHandler.handle(data.t, data.d!!)
-            }
-            }
-        }
-
-
-    suspend fun start() {
+    suspend fun run() {
         gatewayUrl = QQBotApi.getWebsocketGateway();
         LOGGER.debug("Connecting to websocket using gatewayUrl $gatewayUrl")
-        client = HttpClient(CIO) {
-            install(WebSockets) {
-                contentConverter = KotlinxWebsocketSerializationConverter(Json { ignoreUnknownKeys = true })
+        while (true) {
+            client = HttpClient(CIO) {
+                install(WebSockets) {
+                    contentConverter = KotlinxWebsocketSerializationConverter(Json { ignoreUnknownKeys = true })
+                }
+            }
+            try {
+                client.webSocket({
+                    url.takeFrom(gatewayUrl)
+                }) {
+                    // Process first connect response
+                    try {
+                        val connectResponse = receiveDeserialized<PayloadBase<ConnectResponse>>()
+                        if (connectResponse.op != OpCode.HELLO.value) {
+                            LOGGER.error("Connect to websocket failed with response $connectResponse")
+                            throw ConnectionError()
+                        }
+                        setHeartbeatTimer(connectResponse.d!!.heartBeatInterval, this)
+                    } catch (e: Exception) {
+                        throw ConnectionError()
+                    }
+
+                    // Identify
+                    try {
+                        sendSerialized(
+                            PayloadBase(
+                                op = OpCode.IDENTIFY.value,
+                                d = IdentifyRequest("QQBot " + QQBotApi.accessToken, intents = INTENT_VALUE)
+                            )
+                        )
+                        val identifyResponse = receiveDeserialized<PayloadBase<IdentifyResponse>>()
+                        if (identifyResponse.op != OpCode.DISPATCH.value) {
+                            // QQ use DISPATCH event to indicate identify succeed
+                            throw IdentifyError()
+                        }
+                        sessionId = identifyResponse.d!!.sessionId
+                    } catch (e: Exception) {
+                        throw IdentifyError()
+                    }
+
+                    // Listen event
+                    while (true) {
+                        try {
+                            handleSingleEvent(this)
+                        } catch (e: ReconnectByServer) {
+                            reconnect(this)
+                        } catch (e: ReconnectResumed) {
+                            LOGGER.debug("Session resumed begin receiving new events")
+                        }
+                    }
+                }
+            } catch (e: ConnectionError) {
+                LOGGER.error(e)
+            } catch (e: IdentifyError) {
+                LOGGER.error(e)
+            } catch (e: ReconnectError) {
+                //
+            } catch (e: Exception) {
+                LOGGER.error("Unknown error", e)
+                throw e
             }
 
         }
-        client.webSocket({
-            url.takeFrom(gatewayUrl)
-        }) {
-            connect(this)
-            identify(this)
-            listen(this)
-        }
     }
 
+
     private suspend fun setHeartbeatTimer(period: Long, session: DefaultClientWebSocketSession) {
-        LOGGER.debug("Setting websocket heartbeat timer")
-        //TODO: Cancel Timer before schedule a new one
-        heartBeatTimer.schedule(delay = period, period = period) {
+        if (heartBeatTimer != null) {
+            LOGGER.debug("Cancelling websocket heartbeat timer")
+            heartBeatTimer?.cancel()
+        }
+        heartBeatTimer = Timer()
+        // TODO: Thread safety
+        heartBeatTimer!!.schedule(delay = period, period = period) {
             runBlocking {
-                LOGGER.info("Sending heartbeat")
+                LOGGER.debug("Sending heartbeat")
                 session.sendSerialized(PayloadBase(op = OpCode.HEARTBEAT.value, d = latestSerialNumber))
                 //NOTE: We cannot receive and handle response here,
                 // there will be conflicts with other places which are listening to the incoming messages
@@ -96,5 +170,5 @@ object QQBotWebsocket {
 }
 
 fun Application.QQBotWebsocket() {
-    launch { QQBotWebsocket.start() }
+    launch { QQBotWebsocket.run() }
 }

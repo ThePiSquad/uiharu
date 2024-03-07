@@ -28,6 +28,9 @@ object QQBotApi {
 
     lateinit var accessToken: String
     private lateinit var accessTokenExpireTime: LocalDateTime
+    private val jsonConverter = Json {
+        ignoreUnknownKeys = true
+    }
 
     init {
         runBlocking { getAppAccessToken() }
@@ -54,7 +57,7 @@ object QQBotApi {
     }
 
     private fun handleError(api: String, body: String) {
-        val error = Json.decodeFromString<ApiErrorResponse>(body)
+        val error = jsonConverter.decodeFromString<ApiErrorResponse>(body)
         LOGGER.error("API $api error with code ${error.code} message ${error.message} ")
     }
 
@@ -130,6 +133,6 @@ object QQBotApi {
     }
 
     suspend fun sendChannelMessage(channelId: String, message: SendChannelMessageRequest): HttpResponse {
-        return callApi(HttpMethod.Post, "/channels/$channelId/messages", body = Json.encodeToString(message))
+        return callApi(HttpMethod.Post, "/channels/$channelId/messages", body = jsonConverter.encodeToString(message))
     }
 }
