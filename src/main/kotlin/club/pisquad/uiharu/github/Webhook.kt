@@ -7,7 +7,6 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
 data class GithubWebhookEventMeta(
@@ -48,7 +47,7 @@ internal object PayloadUtils {
 object GithubWebhookHandler {
     suspend fun handle(meta: GithubWebhookEventMeta, payload: JsonObject) {
         when (meta.event) {
-            "push" -> handlePush(meta, payload)
+//            "push" -> handlePush(meta, payload)
             "issues" -> handleIssues(meta, payload)
             else -> {
                 println("Unknown github webhook type ${meta.event}")
@@ -56,27 +55,27 @@ object GithubWebhookHandler {
         }
     }
 
-    private suspend fun handlePush(meta: GithubWebhookEventMeta, payload: JsonObject) {
-        val sender = PayloadUtils.getSender(payload)
-        val installation = PayloadUtils.getInstallation(payload)
-        val repo = PayloadUtils.getRepoName(payload)
-
-        val commitMessages = mutableListOf<String>()
-        payload["commits"]?.jsonArray?.forEach {
-            commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
-        }
-        val commits = commitMessages.joinToString("  ||  ")  // We are not allowed to have newline in markdown params
-
-        QQBotApi.sendGithubWebhookNotice(
-            type = meta.event,
-            sender = sender,
-            installation = installation,
-            title1 = "Repo",
-            content1 = repo,
-            title2 = "Commits",
-            content2 = commits
-        )
-    }
+//    private suspend fun handlePush(meta: GithubWebhookEventMeta, payload: JsonObject) {
+//        val sender = PayloadUtils.getSender(payload)
+//        val installation = PayloadUtils.getInstallation(payload)
+//        val repo = PayloadUtils.getRepoName(payload)
+//
+//        val commitMessages = mutableListOf<String>()
+//        payload["commits"]?.jsonArray?.forEach {
+//            commitMessages.add(it.jsonObject.getValue("message").toString().replace("\"", ""))
+//        }
+//        val commits = commitMessages.joinToString("  ||  ")  // We are not allowed to have newline in markdown params
+//
+//        QQBotApi.sendGithubWebhookNotice(
+//            type = meta.event,
+//            sender = sender,
+//            installation = installation,
+//            title1 = "Repo",
+//            content1 = repo,
+//            title2 = "Commits",
+//            content2 = commits
+//        )
+//    }
 
     private suspend fun handleIssues(meta: GithubWebhookEventMeta, payload: JsonObject) {
         val sender = PayloadUtils.getSender(payload)
