@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonElement
 import java.util.*
 import kotlin.concurrent.schedule
 
-internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.websocket.QQBotWebsocket")
+internal val LOGGER = KtorSimpleLogger("club.pisquad.uiharu.qqbot.websocket")
 
 object QQBotWebsocket {
     private lateinit var gatewayUrl: String;
