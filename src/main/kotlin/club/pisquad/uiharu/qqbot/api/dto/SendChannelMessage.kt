@@ -40,12 +40,13 @@ data class MarkdownTemplateInner(
 
 @Serializable
 data class SendChannelMessageRequest(
-     val content: String? = null,
-     val embed: MessageEmbed? = null,
-     @SerialName("message_reference") val messageReference: MessageReference? = null,
-     @SerialName("msg_id") val msgId: String? = null,
-     @SerialName("event_id") val eventId: String? = null,
-     val markdown: MarkdownTemplateInner? = null
+    val content: String? = null,
+    val embed: MessageEmbed? = null,
+    @SerialName("message_reference") val messageReference: MessageReference? = null,
+    @SerialName("msg_id") val msgId: String? = null,
+    @SerialName("event_id") val eventId: String? = null,
+    val markdown: MarkdownTemplateInner? = null,
+    val image: String? = null
 )
 
 object MarkdownTemplateFactory {
