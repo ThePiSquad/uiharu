@@ -135,4 +135,21 @@ object QQBotApi {
     suspend fun sendChannelMessage(channelId: String, message: SendChannelMessageRequest): HttpResponse {
         return callApi(HttpMethod.Post, "/channels/$channelId/messages", body = jsonConverter.encodeToString(message))
     }
+
+    suspend fun sendImages(channelId: String, filepath: String): HttpResponse {
+        TODO()
+//        val url = "$URL_HOST/channels/$channelId/messages"
+//        return getClient().post(url) {
+//            header("Content-Type", "multipart/form-data")
+//            setBody(
+//                MultiPartFormDataContent(
+//                    formData {
+//                        append("image", File(filepath).readBytes(),
+//                            Headers.build {
+//                            })
+//                    }
+//                )
+//            )
+//        }
+    }
 }
