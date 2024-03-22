@@ -1,9 +1,10 @@
 package club.pisquad.uiharu.qqbot.websocket
 
-import club.pisquad.uiharu.qqbot.command.CommandManager
+import club.pisquad.uiharu.qqbot.command.QQBotCommandManager
 import club.pisquad.uiharu.qqbot.websocket.dto.EventType
 import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
 import club.pisquad.uiharu.qqbot.websocket.dto.PayloadBase
+import club.pisquad.uiharu.qqbot.websocket.dto.isCommand
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -27,7 +28,9 @@ internal object DispatchHandler {
 
     private suspend fun handleMessageCreate(event: MessageCreateEvent) {
         LOGGER.debug("handling MessageCreateEvent")
-        CommandManager.handle(event)
+        if (event.isCommand()) {
+            QQBotCommandManager.handle(event)
+        }
     }
 
 }

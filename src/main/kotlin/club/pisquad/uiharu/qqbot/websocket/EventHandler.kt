@@ -1,6 +1,6 @@
 //package club.pisquad.uiharu.qqbot.websocket
 //
-//import club.pisquad.uiharu.qqbot.command.CommandManager
+//import club.pisquad.uiharu.qqbot.command.club.pisquad.uiharu.qqbot.command.CommandManager
 //import club.pisquad.uiharu.qqbot.websocket.dto.EventType
 //import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
 //import kotlinx.serialization.json.Json
@@ -27,6 +27,6 @@
 //    }
 //
 //    private suspend fun messageCreate(event: MessageCreateEvent) {
-//        CommandManager.handle(event)
+//        club.pisquad.uiharu.qqbot.command.CommandManager.handle(event)
 //    }
 //}
