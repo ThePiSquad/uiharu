@@ -1,5 +1,6 @@
 package club.pisquad.uiharu.qqbot.websocket.dto
 
+import club.pisquad.uiharu.qqbot.command.trimCommandContent
 import io.ktor.util.logging.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -59,4 +60,8 @@ fun MessageCreateEvent.trimAtContent(): String {
 fun MessageCreateEvent.isCommand(): Boolean {
     val regex = Regex("""^ ?/\S{1,12}""")
     return regex.find(trimAtContent()) != null
+}
+
+fun MessageCreateEvent.parseCommand(): List<String> {
+    return trimCommandContent().split(" ")
 }

@@ -1,6 +1,7 @@
 package club.pisquad.uiharu.qqbot.command
 
 import club.pisquad.uiharu.qqbot.websocket.dto.MessageCreateEvent
+import club.pisquad.uiharu.qqbot.websocket.dto.parseCommand
 
 interface QQBotCommand {
     val name: String
@@ -12,10 +13,6 @@ interface QQBotCommand {
 
 fun MessageCreateEvent.trimCommandContent(): String {
     return content.replace(Regex("""<@!(\d{20})>"""), "").trim()
-}
-
-fun MessageCreateEvent.parseCommand(): List<String> {
-    return trimCommandContent().split(" ")
 }
 
 object QQBotCommandManager {
